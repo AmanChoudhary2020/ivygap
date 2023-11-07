@@ -1,30 +1,23 @@
 import numpy as np
 from PIL import Image
-from typing import List
+from typing import Iterable
 import os
 import shutil
 
-def coordinate_generator(image_size: tuple[int, int], tile_size: tuple[int, int], slide_x: int, slide_y: int) -> List[tuple[int, int]]:
+def coordinate_generator(image_size: tuple[int, int], tile_size: tuple[int, int], slide_x: int, slide_y: int) -> Iterable[tuple[int, int]]:
     image_width, image_height, _ = image_size
     tile_width, tile_height = tile_size
 
-    coordinates = []
-
     for y in range(0, image_height - tile_height + 1, slide_y):
         for x in range(0, image_width - tile_width + 1, slide_x):
-            coordinates.append((x,y))
-
-    return coordinates
+            yield (x, y)
 
 def tile_generator(image, tile_size, coordinates):
     tile_width, tile_height = tile_size
-    tiles = []
 
     for x, y in coordinates:
-        tiles.append(np.array(image[y:y + tile_height, x:x + tile_width, :]))
-    
-    tiles = np.array(tiles)
-    return tiles
+        tile = np.array(image[y:y + tile_height, x:x + tile_width])
+        yield tile
 
 def save_tiles_as_images(tiles, output_dir):
     if os.path.exists(output_dir):
@@ -53,19 +46,17 @@ def main():
     print(f"Image shape: {image.shape}")
 
     image_size = image.shape
-    tile_size = (100,100)            
+    tile_size = (100, 100)            
 
     # Generate coordinates
     coordinates = coordinate_generator(image_size, tile_size, slide_x=50, slide_y=50)
     # Generate tiles using coordinates
     tiles = tile_generator(image, tile_size, coordinates)
-
+    
     # Save tiles to output directory
     output_dir = "output_tiles"
     save_tiles_as_images(tiles, output_dir)
 
 
-
 if __name__ == "__main__":
     main()
-
